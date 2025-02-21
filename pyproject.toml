@@ -1,12 +1,17 @@
-# this_file: pyproject.toml
+# this_file: pyproject.toml 
+# this_project: twat_os
 [project]
 name = "twat-os"
 dynamic = ["version"]
-description = ""
+description = "Operating system utilities for twat"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-keywords = []
+keywords = [
+    "os",
+    "system",
+    "twat"
+]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
@@ -18,37 +23,42 @@ classifiers = [
 ]
 
 dependencies = [
-    "twat",
+    "fire>=0.6.0",
+    "loguru>=0.7.2",
+    "twat>=1.8.1"
 ]
 
-
 [project.optional-dependencies]
-
 dev = [
-    "pre-commit>=3.6.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
-    "pyupgrade>=3.19.0",
+    "hatch>=1.14.0",
+    "hatchling>=1.27.0",
+    "hatch-vcs>=0.4.0",
+    "mypy>=1.15.0",
+    "pre-commit>=4.1.0",
+    "pyupgrade>=3.19.1",
+    "ruff>=0.9.6"
 ]
 
 test = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "pytest-benchmark>=5.1.0",
+    "pytest-mock>=3.14.0",
+    "pytest-asyncio>=0.25.3",
+    "pytest-timeout>=2.3.1"
 ]
 
-
 all = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
+    "fire>=0.6.0",
+    "loguru>=0.7.2",
+    "twat>=1.8.1"
 ]
 
 [project.scripts]
+twat-os = "twat_os.__main__:main"
+
 [project.entry-points."twat.plugins"]
 os = "twat_os"
-
-
 
 [[project.authors]]
 name = "Adam Twardoch"
@@ -59,77 +69,66 @@ Documentation = "https://github.com/twardoch/twat-os#readme"
 Issues = "https://github.com/twardoch/twat-os/issues"
 Source = "https://github.com/twardoch/twat-os"
 
-
 [build-system]
 build-backend = "hatchling.build"
 requires = [
-    "hatchling>=1.21.0", 
-    "hatch-vcs>=0.3.0"
+    "hatchling>=1.27.0",
+    "hatch-vcs>=0.4.0"
 ]
-
 
 [tool.coverage.paths]
 twat_os = ["src/twat_os", "*/twat-os/src/twat_os"]
 tests = ["tests", "*/twat-os/tests"]
 
-
-
 [tool.coverage.report]
 exclude_lines = [
     "no cov",
     "if __name__ == .__main__.:",
-    "if TYPE_CHECKING:",
+    "if TYPE_CHECKING:"
 ]
 
 [tool.coverage.run]
 source_pkgs = ["twat_os", "tests"]
 branch = true
 parallel = true
-omit = [
-    "src/twat_os/__about__.py",
-]
-
-
+omit = ["src/twat_os/__about__.py"]
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/twat_os/__version__.py"
 
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/twat_os"]
-
-
+include = [
+    "src/twat_os/**/*.py",
+    "src/twat_os/py.typed"
+]
 
 [tool.hatch.envs.default]
 dependencies = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.6",
+    "mypy>=1.15.0"
 ]
-
-[[tool.hatch.envs.all.matrix]]
-python = ["3.10", "3.11", "3.12"]
-
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
 test-cov = "pytest --cov-report=term-missing --cov-config=pyproject.toml --cov=src/twat_os --cov=tests {args:tests}"
 type-check = "mypy src/twat_os tests"
 lint = ["ruff check src/twat_os tests", "ruff format --respect-gitignore src/twat_os tests"]
-fix = ["ruff check  --fix --unsafe-fixes src/twat_os tests", "ruff format --respect-gitignore src/twat_os tests"]
+fix = ["ruff check --fix --unsafe-fixes src/twat_os tests", "ruff format --respect-gitignore src/twat_os tests"]
 
-
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.lint]
 detached = true
 dependencies = [
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "ruff>=0.1.0",
-    "mypy>=1.0.0",
+    "pytest>=8.3.4",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.6",
+    "mypy>=1.15.0"
 ]
-
 
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/twat_os tests}"
@@ -137,10 +136,8 @@ style = ["ruff check {args:.}", "ruff format --respect-gitignore {args:.}"]
 fmt = ["ruff format --respect-gitignore {args:.}", "ruff check --fix {args:.}"]
 all = ["style", "typing"]
 
-
 [tool.hatch.envs.test]
-dependencies = [
-]
+dependencies = []
 
 [tool.hatch.envs.test.scripts]
 test = "python -m pytest -n auto -p no:briefcase {args:tests}"
@@ -151,29 +148,26 @@ bench-save = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benc
 [tool.hatch.version]
 source = "vcs"
 
-
 [tool.hatch.version.raw-options]
 version_scheme = "post-release"
 
-
 [tool.mypy]
 python_version = "3.10"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
 check_untyped_defs = true
+disallow_incomplete_defs = true
 disallow_untyped_decorators = true
+disallow_untyped_defs = true
 no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
 warn_no_return = true
+warn_redundant_casts = true
+warn_return_any = true
 warn_unreachable = true
-
+warn_unused_configs = true
+warn_unused_ignores = true
 
 [tool.ruff]
-target-version = "py310"
 line-length = 88
+target-version = "py310"
 
 [tool.ruff.lint]
 extend-select = [
@@ -201,49 +195,52 @@ extend-select = [
     "TID",
     "UP",
     "W",
-    "YTT",
+    "YTT"
 ]
-ignore = ["ARG001", "E501", "I001", "RUF001", "PLR2004", "EXE003", "ISC001"]
-
-
+ignore = [
+    "ARG001",
+    "E501",
+    "I001",
+    "RUF001",
+    "PLR2004",
+    "EXE003",
+    "ISC001"
+]
 
 [tool.ruff.per-file-ignores]
 "tests/*" = ["S101"]
-
-
-
-
 
 [tool.pytest.ini_options]
 addopts = "-v --durations=10 -p no:briefcase"
 asyncio_mode = "auto"
 console_output_style = "progress"
-filterwarnings = ["ignore::DeprecationWarning", "ignore::UserWarning"]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning"
+]
 log_cli = true
 log_cli_level = "INFO"
 markers = [
-  "benchmark: marks tests as benchmarks (select with '-m benchmark')",
-  "unit: mark a test as a unit test",
-  "integration: mark a test as an integration test",
-  "permutation: tests for permutation functionality",
-  "parameter: tests for parameter parsing",
-  "prompt: tests for prompt parsing",
+    "benchmark: marks tests as benchmarks (select with '-m benchmark')",
+    "unit: mark a test as a unit test",
+    "integration: mark a test as an integration test",
+    "permutation: tests for permutation functionality",
+    "parameter: tests for parameter parsing",
+    "prompt: tests for prompt parsing"
 ]
 norecursedirs = [
-  ".*",
-  "build",
-  "dist",
-  "venv",
-  "__pycache__",
-  "*.egg-info",
-  "_private",
+    ".*",
+    "build",
+    "dist",
+    "venv",
+    "__pycache__",
+    "*.egg-info",
+    "_private"
 ]
-
 python_classes = ["Test*"]
 python_files = ["test_*.py"]
 python_functions = ["test_*"]
 testpaths = ["tests"]
-
 
 [tool.pytest-benchmark]
 min_rounds = 100
@@ -252,12 +249,12 @@ histogram = true
 storage = "file"
 save-data = true
 compare = [
-    "min",    # Minimum time
-    "max",    # Maximum time
-    "mean",   # Mean time
-    "stddev", # Standard deviation
-    "median", # Median time
-    "iqr",    # Inter-quartile range
-    "ops",    # Operations per second
-    "rounds", # Number of rounds
-] 
+    "min",
+    "max",
+    "mean",
+    "stddev",
+    "median",
+    "iqr",
+    "ops",
+    "rounds"
+]

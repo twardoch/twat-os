@@ -1,0 +1,37 @@
+[cache]
+# Base directory for all cache operations
+base_dir = "~/.cache/twat"
+# Directory for storing package-specific cache data
+package_dir = "~/.cache/twat/{package_name}"
+
+[config]
+# Base directory for configuration files
+base_dir = "~/.config/twat"
+# Directory for package-specific configuration
+package_dir = "~/.config/twat/{package_name}"
+
+[data]
+# Base directory for user data
+base_dir = "~/.local/share/twat"
+# Directory for package-specific data
+package_dir = "~/.local/share/twat/{package_name}"
+
+[temp]
+# Base directory for temporary files
+base_dir = "~/tmp/twat"
+# Directory for package-specific temporary files
+package_dir = "~/tmp/twat/{package_name}"
+
+[genai]
+# Directory for storing LoRA files
+lora_dir = "~/.local/share/twat/genai/loras"
+# Directory for model weights
+model_dir = "~/.local/share/twat/genai/models"
+# Directory for generated images
+output_dir = "~/Pictures/twat_genai"
+
+[logs]
+# Base directory for log files
+base_dir = "~/.local/state/twat/logs"
+# Directory for package-specific logs
+package_dir = "~/.local/state/twat/logs/{package_name}" 
