@@ -2,24 +2,26 @@
 description: File tree of the project
 globs: 
 ---
-[ 672]  .
+[ 736]  .
 ├── [  64]  .benchmarks
 ├── [  96]  .cursor
 │   └── [ 224]  rules
 │       ├── [ 821]  0project.mdc
 │       ├── [ 516]  cleanup.mdc
-│       ├── [2.5K]  filetree.mdc
+│       ├── [ 976]  filetree.mdc
 │       └── [2.0K]  quality.mdc
 ├── [  96]  .github
 │   └── [ 128]  workflows
 │       ├── [2.7K]  push.yml
 │       └── [1.4K]  release.yml
 ├── [3.5K]  .gitignore
-├── [ 532]  .pre-commit-config.yaml
+├── [ 470]  .pre-commit-config.yaml
+├── [1.0K]  CLEANUP.txt
 ├── [1.0K]  LICENSE
 ├── [ 742]  README.md
-├── [ 11K]  cleanup.py
-├── [  96]  dist
+├── [   7]  VERSION.txt
+├── [ 13K]  cleanup.py
+├── [ 192]  dist
 │   └── [   1]  .gitkeep
 ├── [5.6K]  pyproject.toml
 ├── [  96]  src
@@ -30,4 +32,4 @@ globs:
 └── [ 128]  tests
     └── [ 145]  test_package.py
 
-10 directories, 17 files
+10 directories, 19 files
