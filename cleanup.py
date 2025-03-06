@@ -160,7 +160,7 @@ class Cleanup:
         """Generate and display tree structure of the project."""
         if not check_command_exists("tree"):
             log_message("Warning: 'tree' command not found. Skipping tree generation.")
-            return None
+            return
 
         try:
             # Create/overwrite the file with YAML frontmatter
@@ -180,7 +180,7 @@ class Cleanup:
 
         except Exception as e:
             log_message(f"Failed to generate tree: {e}")
-        return None
+        return
 
     def _git_status(self) -> bool:
         """Check git status and return True if there are changes."""

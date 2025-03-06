@@ -1,74 +1,128 @@
-# this_file: pyproject.toml 
-# this_project: twat_os
+#==============================================================================
+# TWAT_OS PACKAGE CONFIGURATION
+# This pyproject.toml defines the package metadata, dependencies, build system,
+# and development environment for the twat-os package, which provides operating
+# system utilities for the twat framework.
+#==============================================================================
+
+#------------------------------------------------------------------------------
+# PROJECT METADATA
+# Core package information used by PyPI and package managers.
+#------------------------------------------------------------------------------
 [project]
-name = "twat-os"
-dynamic = ["version"]
-description = "Operating system utilities for twat"
-readme = "README.md"
-requires-python = ">=3.10"
-license = "MIT"
+name = "twat-os" # Package name on PyPI
+dynamic = ["version"] # Fields set dynamically at build time
+description = "Operating system utilities for twat" # Short description
+readme = "README.md" # Path to README file
+requires-python = ">=3.10" # Minimum Python version
+license = "MIT" # License type
+
+# Keywords for PyPI search
 keywords = [
     "os",
-    "system",
-    "twat"
+    "system", 
+    "twat",
+    "utilities",
+    "operating-system",
 ]
+
+# PyPI classifiers for package categorization
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 4 - Beta", # Package maturity level
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.11", 
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Developers",
 ]
 
+# Core dependencies
 dependencies = [
-    "fire>=0.6.0",
-    "loguru>=0.7.2",
-    "twat>=1.8.1"
+    "fire>=0.6.0",      # CLI framework
+    "loguru>=0.7.2",    # Structured logging
+    "twat>=1.8.1"       # Core twat package
 ]
 
+#------------------------------------------------------------------------------
+# OPTIONAL DEPENDENCIES
+# Additional dependencies for optional features, development, and testing.
+#------------------------------------------------------------------------------
 [project.optional-dependencies]
+
+# Development tools
 dev = [
-    "hatch>=1.14.0",
-    "hatchling>=1.27.0",
-    "hatch-vcs>=0.4.0",
-    "mypy>=1.15.0",
-    "pre-commit>=4.1.0",
-    "pyupgrade>=3.19.1",
-    "ruff>=0.9.6"
+    "hatch>=1.14.0",         # Build tool
+    "hatchling>=1.27.0",     # Build backend
+    "hatch-vcs>=0.4.0",      # Version control integration
+    "mypy>=1.15.0",          # Type checking
+    "pre-commit>=4.1.0",     # Pre-commit hooks
+    "pyupgrade>=3.19.1",     # Python syntax upgrader
+    "ruff>=0.9.7",           # Linting and formatting
+    "absolufy-imports>=0.3.1", # Absolute imports
+    "isort>=6.0.1"           # Import sorting
 ]
 
+# Testing tools
 test = [
-    "pytest>=8.3.4",
-    "pytest-cov>=6.0.0",
-    "pytest-benchmark>=5.1.0",
-    "pytest-mock>=3.14.0",
-    "pytest-asyncio>=0.25.3",
-    "pytest-timeout>=2.3.1"
+    "pytest>=8.3.4",           # Testing framework
+    "pytest-cov>=6.0.0",       # Coverage reporting
+    "pytest-xdist>=3.6.1",     # Parallel testing
+    "pytest-benchmark[histogram]>=5.1.0",  # Benchmarking with histogram
+    "pytest-mock>=3.14.0",     # Mocking
+    "pytest-asyncio>=0.25.3",  # Async testing
+    "pytest-timeout>=2.3.1",   # Test timeouts
+    "coverage[toml]>=7.6.12"   # Coverage with TOML support
 ]
 
+# Documentation tools
+docs = [
+    "sphinx>=7.2.6",
+    "sphinx-rtd-theme>=2.0.0",
+    "sphinx-autodoc-typehints>=2.0.0",
+    "myst-parser>=3.0.0", # Markdown support in Sphinx
+]
+
+# All optional dependencies combined
 all = [
     "fire>=0.6.0",
-    "loguru>=0.7.2",
-    "twat>=1.8.1"
+    "loguru>=0.7.2", 
+    "twat>=1.8.1",
+    "pathlib>=1.0.1",         # Path manipulation utilities
+    "psutil>=5.9.5",          # System monitoring and resource utilization
+    "pre-commit>=4.1.0",      # Pre-commit hooks
+    "ruff>=0.9.7",            # Linting and formatting
+    "mypy>=1.15.0"            # Type checking
 ]
 
+#------------------------------------------------------------------------------
+# COMMAND-LINE SCRIPTS
+# Entry points for command-line executables installed with the package.
+#------------------------------------------------------------------------------
 [project.scripts]
 twat-os = "twat_os.__main__:main"
 
 [project.entry-points."twat.plugins"]
 os = "twat_os"
 
+# Author information
 [[project.authors]]
 name = "Adam Twardoch"
 email = "adam+github@twardoch.com"
 
+# Project URLs
 [project.urls]
 Documentation = "https://github.com/twardoch/twat-os#readme"
 Issues = "https://github.com/twardoch/twat-os/issues"
 Source = "https://github.com/twardoch/twat-os"
 
+#------------------------------------------------------------------------------
+# BUILD SYSTEM CONFIGURATION
+# Defines the tools required to build the package.
+#------------------------------------------------------------------------------
 [build-system]
 build-backend = "hatchling.build"
 requires = [
@@ -76,6 +130,10 @@ requires = [
     "hatch-vcs>=0.4.0"
 ]
 
+#------------------------------------------------------------------------------
+# COVERAGE CONFIGURATION
+# Settings for test coverage measurement and reporting.
+#------------------------------------------------------------------------------
 [tool.coverage.paths]
 twat_os = ["src/twat_os", "*/twat-os/src/twat_os"]
 tests = ["tests", "*/twat-os/tests"]
@@ -93,6 +151,10 @@ branch = true
 parallel = true
 omit = ["src/twat_os/__about__.py"]
 
+#------------------------------------------------------------------------------
+# HATCH BUILD CONFIGURATION
+# Configures the build process and development environments.
+#------------------------------------------------------------------------------
 [tool.hatch.build.hooks.vcs]
 version-file = "src/twat_os/__version__.py"
 
@@ -102,14 +164,10 @@ include = [
     "src/twat_os/**/*.py",
     "src/twat_os/py.typed"
 ]
+reproducible = true
 
 [tool.hatch.envs.default]
-dependencies = [
-    "pytest>=8.3.4",
-    "pytest-cov>=6.0.0",
-    "ruff>=0.9.6",
-    "mypy>=1.15.0"
-]
+features = ["dev", "test", "all"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
@@ -123,12 +181,7 @@ python = ["3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.lint]
 detached = true
-dependencies = [
-    "pytest>=8.3.4",
-    "pytest-cov>=6.0.0",
-    "ruff>=0.9.6",
-    "mypy>=1.15.0"
-]
+features = ["dev"]
 
 [tool.hatch.envs.lint.scripts]
 typing = "mypy --install-types --non-interactive {args:src/twat_os tests}"
@@ -137,7 +190,7 @@ fmt = ["ruff format --respect-gitignore {args:.}", "ruff check --fix {args:.}"]
 all = ["style", "typing"]
 
 [tool.hatch.envs.test]
-dependencies = []
+features = ["test"]
 
 [tool.hatch.envs.test.scripts]
 test = "python -m pytest -n auto -p no:briefcase {args:tests}"
@@ -145,12 +198,31 @@ test-cov = "python -m pytest -n auto -p no:briefcase --cov-report=term-missing -
 bench = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only"
 bench-save = "python -m pytest -v -p no:briefcase tests/test_benchmark.py --benchmark-only --benchmark-json=benchmark/results.json"
 
+# Documentation environment
+[tool.hatch.envs.docs]
+features = ["docs"]
+
+# Documentation environment commands
+[tool.hatch.envs.docs.scripts]
+build = "sphinx-build -b html docs/source docs/build"
+
+# GitHub Actions workflow configuration
+[tool.hatch.envs.ci]
+features = ["test"]
+
+[tool.hatch.envs.ci.scripts]
+test = "pytest --cov=src/twat_os --cov-report=xml"
+
 [tool.hatch.version]
 source = "vcs"
 
 [tool.hatch.version.raw-options]
 version_scheme = "post-release"
 
+#------------------------------------------------------------------------------
+# MYPY CONFIGURATION
+# Configuration for type checking with mypy.
+#------------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.10"
 check_untyped_defs = true
@@ -165,51 +237,88 @@ warn_unreachable = true
 warn_unused_configs = true
 warn_unused_ignores = true
 
+#------------------------------------------------------------------------------
+# RUFF CONFIGURATION
+# Configuration for Ruff linting and formatting.
+#------------------------------------------------------------------------------
 [tool.ruff]
 line-length = 88
 target-version = "py310"
 
 [tool.ruff.lint]
 extend-select = [
-    "A",
-    "ARG",
-    "B",
-    "C",
-    "DTZ",
-    "E",
-    "EM",
-    "F",
-    "FBT",
-    "I",
-    "ICN",
-    "ISC",
-    "N",
-    "PLC",
-    "PLE",
-    "PLR",
-    "PLW",
-    "Q",
-    "RUF",
-    "S",
-    "T",
-    "TID",
-    "UP",
-    "W",
-    "YTT"
+    "A",     # flake8-builtins
+    "ARG",   # flake8-unused-arguments
+    "ASYNC", # flake8-async
+    "B",     # flake8-bugbear
+    "C",     # flake8-comprehensions
+    "DTZ",   # flake8-datetimez
+    "E",     # pycodestyle errors
+    "EM",    # flake8-errmsg
+    "F",     # pyflakes
+    "FBT",   # flake8-boolean-trap
+    "I",     # isort
+    "ICN",   # flake8-import-conventions
+    "ISC",   # flake8-implicit-str-concat
+    "LOG",   # flake8-logging
+    "N",     # pep8-naming
+    "PLC",   # pylint convention
+    "PLE",   # pylint error
+    "PLR",   # pylint refactor
+    "PLW",   # pylint warning
+    "PT",    # flake8-pytest-style
+    "PTH",   # flake8-use-pathlib
+    "PYI",   # flake8-pyi
+    "RET",   # flake8-return
+    "RSE",   # flake8-raise
+    "RUF",   # Ruff-specific
+    "S",     # flake8-bandit
+    "SIM",   # flake8-simplify
+    "T",     # flake8-print
+    "TCH",   # flake8-type-checking
+    "TID",   # flake8-tidy-imports
+    "UP",    # pyupgrade
+    "W",     # pycodestyle warnings
+    "YTT"    # flake8-2020
 ]
+
 ignore = [
-    "ARG001",
-    "E501",
-    "I001",
-    "RUF001",
-    "PLR2004",
-    "EXE003",
-    "ISC001"
+    "ARG001",  # Unused function argument
+    "E501",    # Line too long
+    "I001",    # Import block formatting
+    "RUF001",  # String formatting
+    "PLR2004", # Magic numbers
+    "EXE003",  # Shebang formatting
+    "ISC001",  # Implicit string concatenation
+    "B027",    # Empty method in abstract base class
+    "C901",    # Function complexity
+    "FBT003",  # Boolean positional args
+    "PLR0911", # Too many returns
+    "PLR0912", # Too many branches
+    "PLR0913", # Too many arguments
+    "PLR0915", # Too many statements
+    "PLW0603", # Global statement usage
+    "S105",    # Possible hardcoded password
+    "S106",    # Possible hardcoded password
+    "S107",    # Possible hardcoded password
+    "SIM102"   # Nested if statements
 ]
 
-[tool.ruff.per-file-ignores]
-"tests/*" = ["S101"]
+unfixable = ["F401"]  # Don't remove unused imports automatically
 
+[tool.ruff.lint.isort]
+known-first-party = ["twat_os"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "PLR2004", "TID252"]
+
+#------------------------------------------------------------------------------
+# PYTEST CONFIGURATION
+# Configuration for pytest testing framework.
+#------------------------------------------------------------------------------
 [tool.pytest.ini_options]
 addopts = "-v --durations=10 -p no:briefcase"
 asyncio_mode = "auto"
@@ -249,12 +358,12 @@ histogram = true
 storage = "file"
 save-data = true
 compare = [
-    "min",
-    "max",
-    "mean",
-    "stddev",
-    "median",
-    "iqr",
-    "ops",
-    "rounds"
+    "min",    # Minimum time
+    "max",    # Maximum time
+    "mean",   # Mean time
+    "stddev", # Standard deviation
+    "median", # Median time
+    "iqr",    # Inter-quartile range
+    "ops",    # Operations per second
+    "rounds"  # Number of rounds
 ]

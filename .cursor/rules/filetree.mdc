@@ -8,7 +8,7 @@ globs:
 │   └── [ 224]  rules
 │       ├── [ 821]  0project.mdc
 │       ├── [ 516]  cleanup.mdc
-│       ├── [ 976]  filetree.mdc
+│       ├── [1.0K]  filetree.mdc
 │       └── [2.0K]  quality.mdc
 ├── [  96]  .github
 │   └── [ 128]  workflows
@@ -19,6 +19,7 @@ globs:
 ├── [1.0K]  CLEANUP.txt
 ├── [1.0K]  LICENSE
 ├── [ 742]  README.md
+├── [ 33K]  REPO_CONTENT.txt
 ├── [   7]  VERSION.txt
 ├── [ 13K]  cleanup.py
 ├── [ 192]  dist
@@ -32,4 +33,4 @@ globs:
 └── [ 128]  tests
     └── [ 145]  test_package.py
 
-10 directories, 19 files
+10 directories, 20 files
