@@ -88,10 +88,9 @@ docs = [
 
 # All optional dependencies combined
 all = [
-    "fire>=0.6.0",
+    "fire>=0.7.0",
     "loguru>=0.7.2", 
     "twat>=1.8.1",
-    "pathlib>=1.0.1",         # Path manipulation utilities
     "psutil>=5.9.5",          # System monitoring and resource utilization
     "pre-commit>=4.1.0",      # Pre-commit hooks
     "ruff>=0.9.7",            # Linting and formatting

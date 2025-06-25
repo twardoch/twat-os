@@ -167,7 +167,9 @@ class Cleanup:
             rules_dir = Path(".cursor/rules")
             rules_dir.mkdir(parents=True, exist_ok=True)
             # Get tree output
-            tree_result = run_command(["tree", "-a", "-I", ".git", "--gitignore", "-n", "-h", "-I", "*_cache"])
+            tree_result = run_command(
+                ["tree", "-a", "-I", ".git", "--gitignore", "-n", "-h", "-I", "*_cache"]
+            )
             tree_text = tree_result.stdout
             # Write frontmatter and tree output to file
             with open(rules_dir / "filetree.mdc", "w") as f:
@@ -196,7 +198,9 @@ class Cleanup:
             venv_path = self.workspace / ".venv" / "bin" / "activate"
             if venv_path.exists():
                 os.environ["VIRTUAL_ENV"] = str(self.workspace / ".venv")
-                os.environ["PATH"] = f"{self.workspace / '.venv' / 'bin'}{os.pathsep}{os.environ['PATH']}"
+                os.environ["PATH"] = (
+                    f"{self.workspace / '.venv' / 'bin'}{os.pathsep}{os.environ['PATH']}"
+                )
                 log_message("Virtual environment created and activated")
             else:
                 log_message("Virtual environment created but activation failed")

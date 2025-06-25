@@ -18,9 +18,9 @@ package_dir = "~/.local/share/twat/{package_name}"
 
 [temp]
 # Base directory for temporary files
-base_dir = "~/tmp/twat"
+base_dir = "${HOME}/tmp/twat"
 # Directory for package-specific temporary files
-package_dir = "~/tmp/twat/{package_name}"
+package_dir = "${HOME}/tmp/twat/{package_name}"
 
 [genai]
 # Directory for storing LoRA files
@@ -28,7 +28,7 @@ lora_dir = "~/.local/share/twat/genai/loras"
 # Directory for model weights
 model_dir = "~/.local/share/twat/genai/models"
 # Directory for generated images
-output_dir = "~/Pictures/twat_genai"
+output_dir = "${HOME}/Pictures/twat_genai"
 
 [logs]
 # Base directory for log files

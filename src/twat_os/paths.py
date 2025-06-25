@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run
 # /// script
-# dependencies = ["pydantic", "platformdirs"]
+# dependencies = ["pydantic", "platformdirs", "tomli"]
 # ///
 """Path management for twat packages.
 
@@ -37,17 +37,21 @@ class PathConfig(BaseModel):
         if v is None:
             return None
         if isinstance(v, str):
-            # Expand both ~ and environment variables
-            expanded = os.path.expandvars(os.path.expanduser(v))
-            return Path(expanded)
-        return v
+            # First expand environment variables
+            expanded = os.path.expandvars(v)
+            # Then expand user home directory (~ character)
+            expanded = os.path.expanduser(expanded)
+            # Convert to absolute path to ensure no relative path issues
+            return Path(expanded).expanduser().absolute()
+        return v.expanduser().absolute()
 
     @model_validator(mode="after")
     def validate_and_create_dirs(self) -> Self:
         """Create directories if they don't exist and creation is enabled."""
         if self.create_if_missing:
-            self.base_dir.mkdir(parents=True, exist_ok=True)
-            if self.package_dir:
+            if self.base_dir is not None:
+                self.base_dir.mkdir(parents=True, exist_ok=True)
+            if self.package_dir is not None:
                 self.package_dir.mkdir(parents=True, exist_ok=True)
         return self
 
@@ -94,17 +98,23 @@ class GenAIConfig(PathConfig):
         default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/models"
     )
     output_dir: Path = Field(
-        default_factory=lambda: Path.home() / "Pictures/twat_genai"
+        default_factory=lambda: Path(
+            os.path.expanduser("~/Pictures/twat_genai")
+        ).absolute()
     )
 
     @model_validator(mode="after")
     def validate_and_create_all_dirs(self) -> Self:
         """Create all GenAI directories if enabled."""
         if self.create_if_missing:
-            self.base_dir.mkdir(parents=True, exist_ok=True)
-            self.lora_dir.mkdir(parents=True, exist_ok=True)
-            self.model_dir.mkdir(parents=True, exist_ok=True)
-            self.output_dir.mkdir(parents=True, exist_ok=True)
+            if self.base_dir is not None:
+                self.base_dir.mkdir(parents=True, exist_ok=True)
+            if self.lora_dir is not None:
+                self.lora_dir.mkdir(parents=True, exist_ok=True)
+            if self.model_dir is not None:
+                self.model_dir.mkdir(parents=True, exist_ok=True)
+            if self.output_dir is not None:
+                self.output_dir.mkdir(parents=True, exist_ok=True)
         return self
 
 
@@ -155,8 +165,14 @@ class PathManager:
         def format_path(path_str: str) -> Path | None:
             if not self.package_name:
                 return None
-            expanded = os.path.expandvars(os.path.expanduser(path_str))
-            return Path(expanded.format(package_name=self.package_name))
+            # First format with package name
+            formatted = path_str.format(package_name=self.package_name)
+            # Then expand environment variables
+            expanded = os.path.expandvars(formatted)
+            # Finally expand home directory
+            expanded = os.path.expanduser(expanded)
+            # Return absolute path
+            return Path(expanded).absolute()
 
         # Initialize configurations
         self.cache = CacheConfig(
