@@ -1,8 +1,8 @@
 """Test suite for twat_os."""
 
+import twat_os
 
-def test_version():
+
+def test_version() -> None:
     """Verify package exposes version."""
-    import twat_os
-
     assert twat_os.__version__

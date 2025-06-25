@@ -1,6 +1,6 @@
 #!/usr/bin/env -S uv run
 # /// script
-# dependencies = ["pydantic", "platformdirs", "tomli"]
+# dependencies = ["pydantic", "platformdirs"]
 # ///
 """Path management for twat packages.
 
@@ -12,11 +12,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, cast
 
 import platformdirs
 import tomli
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 # Load default paths from TOML
 PATHS_TOML = Path(__file__).parent / "paths.toml"
@@ -37,21 +40,18 @@ class PathConfig(BaseModel):
         if v is None:
             return None
         if isinstance(v, str):
-            # First expand environment variables
-            expanded = os.path.expandvars(v)
-            # Then expand user home directory (~ character)
-            expanded = os.path.expanduser(expanded)
-            # Convert to absolute path to ensure no relative path issues
-            return Path(expanded).expanduser().absolute()
-        return v.expanduser().absolute()
+            # Expand both ~ and environment variables
+            expanded_user = Path(v).expanduser()
+            expanded_vars = os.path.expandvars(str(expanded_user))
+            return Path(expanded_vars)
+        return v
 
     @model_validator(mode="after")
     def validate_and_create_dirs(self) -> Self:
         """Create directories if they don't exist and creation is enabled."""
         if self.create_if_missing:
-            if self.base_dir is not None:
-                self.base_dir.mkdir(parents=True, exist_ok=True)
-            if self.package_dir is not None:
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+            if self.package_dir:
                 self.package_dir.mkdir(parents=True, exist_ok=True)
         return self
 
@@ -98,23 +98,17 @@ class GenAIConfig(PathConfig):
         default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/models"
     )
     output_dir: Path = Field(
-        default_factory=lambda: Path(
-            os.path.expanduser("~/Pictures/twat_genai")
-        ).absolute()
+        default_factory=lambda: Path.home() / "Pictures/twat_genai"
     )
 
     @model_validator(mode="after")
     def validate_and_create_all_dirs(self) -> Self:
         """Create all GenAI directories if enabled."""
         if self.create_if_missing:
-            if self.base_dir is not None:
-                self.base_dir.mkdir(parents=True, exist_ok=True)
-            if self.lora_dir is not None:
-                self.lora_dir.mkdir(parents=True, exist_ok=True)
-            if self.model_dir is not None:
-                self.model_dir.mkdir(parents=True, exist_ok=True)
-            if self.output_dir is not None:
-                self.output_dir.mkdir(parents=True, exist_ok=True)
+            self.base_dir.mkdir(parents=True, exist_ok=True)
+            self.lora_dir.mkdir(parents=True, exist_ok=True)
+            self.model_dir.mkdir(parents=True, exist_ok=True)
+            self.output_dir.mkdir(parents=True, exist_ok=True)
         return self
 
 
@@ -133,6 +127,7 @@ class PathManager:
         self,
         package_name: str | None = None,
         config_file: str | Path | None = None,
+        *,
         create_dirs: bool = True,
     ) -> None:
         """Initialize path manager.
@@ -165,14 +160,9 @@ class PathManager:
         def format_path(path_str: str) -> Path | None:
             if not self.package_name:
                 return None
-            # First format with package name
-            formatted = path_str.format(package_name=self.package_name)
-            # Then expand environment variables
-            expanded = os.path.expandvars(formatted)
-            # Finally expand home directory
-            expanded = os.path.expanduser(expanded)
-            # Return absolute path
-            return Path(expanded).absolute()
+            expanded_user = Path(path_str).expanduser()
+            expanded_vars = os.path.expandvars(str(expanded_user))
+            return Path(expanded_vars.format(package_name=self.package_name))
 
         # Initialize configurations
         self.cache = CacheConfig(
@@ -227,7 +217,22 @@ class PathManager:
             AttributeError: If category or key doesn't exist
         """
         config = getattr(self, category)
-        return getattr(config, key)
+        path_value = getattr(config, key)
+        if not isinstance(path_value, Path):
+            # This case should ideally not happen if Pydantic models are correct
+            # and keys always point to Path objects or None (for package_dir sometimes).
+            # However, to satisfy type checker for dynamic getattr:
+            if path_value is None and key == "package_dir":  # package_dir can be None
+                # This function is typed to return Path, so None is not allowed here.
+                # This indicates a potential design issue or misuse of get_path for optional paths.
+                # For now, raising an error is safer than returning None.
+                msg = (
+                    f"Path for '{category}.{key}' is None, but Path type was expected."
+                )
+                raise ValueError(msg)
+            msg = f"Unexpected type for '{category}.{key}': {type(path_value)}. Expected Path."
+            raise TypeError(msg)
+        return path_value  # Cast is redundant due to isinstance check
 
     @classmethod
     def for_package(
