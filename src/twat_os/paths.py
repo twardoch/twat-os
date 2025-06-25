@@ -12,11 +12,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Self
+from typing import TYPE_CHECKING, cast
 
 import platformdirs
 import tomli
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 # Load default paths from TOML
 PATHS_TOML = Path(__file__).parent / "paths.toml"
@@ -38,8 +41,9 @@ class PathConfig(BaseModel):
             return None
         if isinstance(v, str):
             # Expand both ~ and environment variables
-            expanded = os.path.expandvars(os.path.expanduser(v))
-            return Path(expanded)
+            expanded_user = Path(v).expanduser()
+            expanded_vars = os.path.expandvars(str(expanded_user))
+            return Path(expanded_vars)
         return v
 
     @model_validator(mode="after")
@@ -123,6 +127,7 @@ class PathManager:
         self,
         package_name: str | None = None,
         config_file: str | Path | None = None,
+        *,
         create_dirs: bool = True,
     ) -> None:
         """Initialize path manager.
@@ -155,8 +160,9 @@ class PathManager:
         def format_path(path_str: str) -> Path | None:
             if not self.package_name:
                 return None
-            expanded = os.path.expandvars(os.path.expanduser(path_str))
-            return Path(expanded.format(package_name=self.package_name))
+            expanded_user = Path(path_str).expanduser()
+            expanded_vars = os.path.expandvars(str(expanded_user))
+            return Path(expanded_vars.format(package_name=self.package_name))
 
         # Initialize configurations
         self.cache = CacheConfig(
@@ -211,7 +217,22 @@ class PathManager:
             AttributeError: If category or key doesn't exist
         """
         config = getattr(self, category)
-        return getattr(config, key)
+        path_value = getattr(config, key)
+        if not isinstance(path_value, Path):
+            # This case should ideally not happen if Pydantic models are correct
+            # and keys always point to Path objects or None (for package_dir sometimes).
+            # However, to satisfy type checker for dynamic getattr:
+            if path_value is None and key == "package_dir":  # package_dir can be None
+                # This function is typed to return Path, so None is not allowed here.
+                # This indicates a potential design issue or misuse of get_path for optional paths.
+                # For now, raising an error is safer than returning None.
+                msg = (
+                    f"Path for '{category}.{key}' is None, but Path type was expected."
+                )
+                raise ValueError(msg)
+            msg = f"Unexpected type for '{category}.{key}': {type(path_value)}. Expected Path."
+            raise TypeError(msg)
+        return path_value  # Cast is redundant due to isinstance check
 
     @classmethod
     def for_package(
