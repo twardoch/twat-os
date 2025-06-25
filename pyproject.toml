@@ -44,7 +44,9 @@ classifiers = [
 dependencies = [
     "fire>=0.6.0",      # CLI framework
     "loguru>=0.7.2",    # Structured logging
-    "twat>=1.8.1"       # Core twat package
+    "twat>=1.8.1",       # Core twat package
+    "pydantic>=2.0",    # Data validation and settings management
+    "platformdirs>=3.0.0" # Platform-specific user directories
 ]
 
 #------------------------------------------------------------------------------
@@ -63,7 +65,8 @@ dev = [
     "pyupgrade>=3.19.1",     # Python syntax upgrader
     "ruff>=0.9.7",           # Linting and formatting
     "absolufy-imports>=0.3.1", # Absolute imports
-    "isort>=6.0.1"           # Import sorting
+    "isort>=6.0.1",           # Import sorting
+    "typing-extensions>=4.0.0" # For Self type hint and other backports
 ]
 
 # Testing tools
@@ -84,18 +87,6 @@ docs = [
     "sphinx-rtd-theme>=2.0.0",
     "sphinx-autodoc-typehints>=2.0.0",
     "myst-parser>=3.0.0", # Markdown support in Sphinx
-]
-
-# All optional dependencies combined
-all = [
-    "fire>=0.6.0",
-    "loguru>=0.7.2", 
-    "twat>=1.8.1",
-    "pathlib>=1.0.1",         # Path manipulation utilities
-    "psutil>=5.9.5",          # System monitoring and resource utilization
-    "pre-commit>=4.1.0",      # Pre-commit hooks
-    "ruff>=0.9.7",            # Linting and formatting
-    "mypy>=1.15.0"            # Type checking
 ]
 
 #------------------------------------------------------------------------------
@@ -167,7 +158,7 @@ include = [
 reproducible = true
 
 [tool.hatch.envs.default]
-features = ["dev", "test", "all"]
+features = ["dev", "test"]
 
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"

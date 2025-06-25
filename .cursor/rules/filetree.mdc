@@ -2,35 +2,41 @@
 description: File tree of the project
 globs: 
 ---
-[ 736]  .
-├── [  64]  .benchmarks
-├── [  96]  .cursor
-│   └── [ 224]  rules
-│       ├── [ 821]  0project.mdc
+[4.0K]  .
+├── [4.0K]  .benchmarks
+├── [4.0K]  .cursor
+│   └── [4.0K]  rules
+│       ├── [ 982]  0project.mdc
 │       ├── [ 516]  cleanup.mdc
-│       ├── [1.0K]  filetree.mdc
+│       ├── [1.2K]  filetree.mdc
 │       └── [2.0K]  quality.mdc
-├── [  96]  .github
-│   └── [ 128]  workflows
+├── [4.0K]  .github
+│   └── [4.0K]  workflows
 │       ├── [2.7K]  push.yml
 │       └── [1.4K]  release.yml
 ├── [3.5K]  .gitignore
 ├── [ 470]  .pre-commit-config.yaml
-├── [1.0K]  CLEANUP.txt
+├── [1.1K]  CHANGELOG.md
+├── [1.1K]  CLEANUP.txt
 ├── [1.0K]  LICENSE
+├── [ 187]  LOG.md
 ├── [ 742]  README.md
 ├── [ 33K]  REPO_CONTENT.txt
+├── [  34]  TODO.md
 ├── [   7]  VERSION.txt
-├── [ 13K]  cleanup.py
-├── [ 192]  dist
+├── [ 12K]  cleanup.py
+├── [4.0K]  dist
 │   └── [   1]  .gitkeep
-├── [5.6K]  pyproject.toml
-├── [  96]  src
-│   └── [ 224]  twat_os
+├── [456K]  llms.txt
+├── [ 11K]  pyproject.toml
+├── [4.0K]  src
+│   └── [4.0K]  twat_os
 │       ├── [  95]  __init__.py
-│       ├── [7.4K]  paths.py
+│       ├── [4.0K]  __pycache__
+│       ├── [8.6K]  paths.py
 │       └── [1.0K]  paths.toml
-└── [ 128]  tests
-    └── [ 145]  test_package.py
+└── [4.0K]  tests
+    ├── [4.0K]  __pycache__
+    └── [ 149]  test_package.py
 
-10 directories, 20 files
+12 directories, 24 files

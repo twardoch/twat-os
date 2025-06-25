@@ -1,19 +1,19 @@
 ---
-description: About this project
+description: About the twat-os project
 globs:
 ---
-# About this project
+# About twat-os
 
-`twat-fs` is a file system utility library focused on robust and extensible file upload capabilities with multiple provider support. It provides:
+`twat-os` is a Python package providing operating system related utilities for the `twat` ecosystem. Its primary focus is on robust and configurable path management for applications and plugins.
 
-- Multi-provider upload system with smart fallback (catbox.moe default, plus Dropbox, S3, etc.)
-- Automatic retry for temporary failures, fallback for permanent ones
-- URL validation and clean developer experience with type hints
-- Simple CLI: `python -m twat_fs upload_file path/to/file.txt`
-- Easy installation: `uv pip install twat-fs` (basic) or `uv pip install 'twat-fs[all,dev]'` (all features)
+## Key Features:
+- **Path Management**: Centralized system for managing application paths (cache, config, data, logs, etc.) using `platformdirs` for cross-platform compatibility and `pydantic` for validation.
+- **Configurable**: Path definitions can be customized via a `paths.toml` file.
+- **Integration with `twat`**: Designed to function as a plugin within the `twat` framework.
+- **Developer Experience**: Clean API with type hints.
 
 ## Development Notes
-- Uses `uv` for Python package management
-- Quality tools: ruff, mypy, pytest
-- Clear provider protocol for adding new storage backends
-- Strong typing and runtime checks throughout
+- Uses `uv` for Python package management.
+- Quality tools: `ruff` for linting/formatting, `mypy` for type checking, `pytest` for testing.
+- Built with Hatch and includes CI/CD setup using GitHub Actions.
+- Strong typing and runtime checks are encouraged.
