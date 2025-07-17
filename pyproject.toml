@@ -46,7 +46,9 @@ dependencies = [
     "loguru>=0.7.2",    # Structured logging
     "twat>=1.8.1",       # Core twat package
     "pydantic>=2.0",    # Data validation and settings management
-    "platformdirs>=3.0.0" # Platform-specific user directories
+    "platformdirs>=3.0.0", # Platform-specific user directories
+    "tomli>=2.0.0",     # TOML parsing
+    "rich>=13.0.0",     # Rich text and beautiful formatting
 ]
 
 #------------------------------------------------------------------------------
@@ -66,7 +68,15 @@ dev = [
     "ruff>=0.9.7",           # Linting and formatting
     "absolufy-imports>=0.3.1", # Absolute imports
     "isort>=6.0.1",           # Import sorting
-    "typing-extensions>=4.0.0" # For Self type hint and other backports
+    "typing-extensions>=4.0.0", # For Self type hint and other backports
+    "build>=1.0.0",          # Build tool
+    "twine>=5.0.0",          # Package upload
+    "bandit>=1.7.0",         # Security linting
+    "safety>=3.0.0",         # Dependency security
+    "requests>=2.31.0",      # HTTP requests (for scripts)
+    "gitpython>=3.1.0",      # Git operations (for scripts)
+    "semver>=3.0.0",         # Semantic versioning (for scripts)
+    "pyinstaller>=6.0.0",    # Binary building
 ]
 
 # Testing tools
