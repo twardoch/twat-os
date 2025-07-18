@@ -26,6 +26,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: |
+          uv pip install --system --upgrade pip
+          uv pip install --system ".[dev]"
+
       - name: Run Ruff lint
         uses: astral-sh/ruff-action@v3
         with:
@@ -38,14 +55,23 @@ jobs:
           version: "latest"
           args: "format --check --respect-gitignore"
 
+      - name: Run type checking
+        run: uv run mypy src/twat_os tests
+
+      - name: Run security checks
+        run: |
+          uv pip install --system bandit safety
+          uv run bandit -r src/twat_os -f json || true
+          uv run safety check || true
+
   test:
     name: Run Tests
     needs: quality
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-        os: [ubuntu-latest]
-      fail-fast: true
+        os: [ubuntu-latest, windows-latest, macos-latest]
+      fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout code
@@ -85,6 +111,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -99,14 +127,55 @@ jobs:
           enable-cache: true
 
       - name: Install build tools
-        run: uv pip install build hatchling hatch-vcs
+        run: uv pip install --system build hatchling hatch-vcs
 
       - name: Build distributions
         run: uv run python -m build --outdir dist
+
+      - name: Verify distributions
+        run: |
+          ls -la dist/
+          test -n "$(find dist -name '*.whl')" || (echo "Wheel file missing" && exit 1)
+          test -n "$(find dist -name '*.tar.gz')" || (echo "Source distribution missing" && exit 1)
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-files
           path: dist/
-          retention-days: 5 
+          retention-days: 5
+
+  coverage:
+    name: Coverage Report
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-reports/
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install coverage tools
+        run: pip install coverage[toml]
+
+      - name: Combine coverage reports
+        run: |
+          coverage combine coverage-reports/*/coverage.xml
+          coverage report
+          coverage html
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false 
