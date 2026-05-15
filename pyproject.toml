@@ -28,16 +28,13 @@ keywords = [
 
 # PyPI classifiers for package categorization
 classifiers = [
-    "Development Status :: 4 - Beta", # Package maturity level
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11", 
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
-    "Operating System :: OS Independent",
-    "License :: OSI Approved :: MIT License",
-    "Intended Audience :: Developers",
 ]
 
 # Core dependencies
@@ -243,83 +240,68 @@ warn_unused_ignores = true
 # Configuration for Ruff linting and formatting.
 #------------------------------------------------------------------------------
 [tool.ruff]
-line-length = 88
+line-length = 120
 target-version = "py310"
 
 [tool.ruff.lint]
-extend-select = [
-    "A",     # flake8-builtins
-    "ARG",   # flake8-unused-arguments
-    "ASYNC", # flake8-async
-    "B",     # flake8-bugbear
-    "C",     # flake8-comprehensions
-    "DTZ",   # flake8-datetimez
-    "E",     # pycodestyle errors
-    "EM",    # flake8-errmsg
-    "F",     # pyflakes
-    "FBT",   # flake8-boolean-trap
-    "I",     # isort
-    "ICN",   # flake8-import-conventions
-    "ISC",   # flake8-implicit-str-concat
-    "LOG",   # flake8-logging
-    "N",     # pep8-naming
-    "PLC",   # pylint convention
-    "PLE",   # pylint error
-    "PLR",   # pylint refactor
-    "PLW",   # pylint warning
-    "PT",    # flake8-pytest-style
-    "PTH",   # flake8-use-pathlib
-    "PYI",   # flake8-pyi
-    "RET",   # flake8-return
-    "RSE",   # flake8-raise
-    "RUF",   # Ruff-specific
-    "S",     # flake8-bandit
-    "SIM",   # flake8-simplify
-    "T",     # flake8-print
-    "TCH",   # flake8-type-checking
-    "TID",   # flake8-tidy-imports
-    "UP",    # pyupgrade
-    "W",     # pycodestyle warnings
-    "YTT"    # flake8-2020
+select = [
+    "A",
+    "ARG",
+    "B",
+    "C",
+    "DTZ",
+    "E",
+    "EM",
+    "F",
+    "FBT",
+    "I",
+    "ICN",
+    "ISC",
+    "N",
+    "PLC",
+    "PLE",
+    "PLR",
+    "PLW",
+    "Q",
+    "RUF",
+    "S",
+    "T",
+    "TID",
+    "UP",
+    "W",
+    "YTT",
 ]
-
 ignore = [
-    "ARG001",  # Unused function argument
-    "E501",    # Line too long
-    "I001",    # Import block formatting
-    "RUF001",  # String formatting
-    "PLR2004", # Magic numbers
-    "EXE003",  # Shebang formatting
-    "ISC001",  # Implicit string concatenation
-    "B027",    # Empty method in abstract base class
-    "C901",    # Function complexity
-    "FBT003",  # Boolean positional args
-    "PLR0911", # Too many returns
-    "PLR0912", # Too many branches
-    "PLR0913", # Too many arguments
-    "PLR0915", # Too many statements
-    "PLW0603", # Global statement usage
-    "S105",    # Possible hardcoded password
-    "S106",    # Possible hardcoded password
-    "S107",    # Possible hardcoded password
-    "SIM102"   # Nested if statements
+    "ARG001",
+    "ARG002",
+    "ARG004",
+    "ARG005",
+    "B904",
+    "C901",
+    "DTZ005",
+    "E501",
+    "F401",
+    "F811",
+    "FBT001",
+    "FBT002",
+    "FBT003",
+    "I001",
+    "ISC001",
+    "N803",
+    "PLR0911",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+    "PLR2004",
+    "S311",
+    "S603",
+    "S607",
+    "T201",
 ]
-
-unfixable = ["F401"]  # Don't remove unused imports automatically
-
-[tool.ruff.lint.isort]
-known-first-party = ["twat_os"]
-
-[tool.ruff.lint.flake8-tidy-imports]
-ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "PLR2004", "TID252"]
+"tests/*" = ["S101"]
 
-#------------------------------------------------------------------------------
-# PYTEST CONFIGURATION
-# Configuration for pytest testing framework.
-#------------------------------------------------------------------------------
 [tool.pytest.ini_options]
 addopts = "-v --durations=10 -p no:briefcase"
 asyncio_mode = "auto"
@@ -334,9 +316,9 @@ markers = [
     "benchmark: marks tests as benchmarks (select with '-m benchmark')",
     "unit: mark a test as a unit test",
     "integration: mark a test as an integration test",
-    "permutation: tests for permutation functionality",
-    "parameter: tests for parameter parsing",
-    "prompt: tests for prompt parsing"
+    "slow: marks tests as slow (select with '-m slow')",
+    "online: marks tests that require internet access",
+    "requires_api_key: marks tests that require API keys",
 ]
 norecursedirs = [
     ".*",

@@ -37,7 +37,7 @@ class TestConfigLoading:
         """Test that paths.toml contains required sections."""
         content = PATHS_TOML.read_text()
         parsed = tomli.loads(content)
-        
+
         required_sections = ["cache", "config", "data", "temp", "genai", "logs"]
         for section in required_sections:
             assert section in parsed, f"Missing required section: {section}"
@@ -46,13 +46,13 @@ class TestConfigLoading:
         """Test that paths.toml sections contain required keys."""
         content = PATHS_TOML.read_text()
         parsed = tomli.loads(content)
-        
+
         # Standard sections should have base_dir and package_dir
         standard_sections = ["cache", "config", "data", "temp", "logs"]
         for section in standard_sections:
             assert "base_dir" in parsed[section], f"Missing base_dir in {section}"
             assert "package_dir" in parsed[section], f"Missing package_dir in {section}"
-        
+
         # GenAI section should have specific keys
         genai_keys = ["lora_dir", "model_dir", "output_dir"]
         for key in genai_keys:
@@ -63,31 +63,31 @@ class TestConfigLoading:
         custom_config = {
             "cache": {
                 "base_dir": str(temp_dir / "custom_cache"),
-                "package_dir": str(temp_dir / "custom_cache/{package_name}")
+                "package_dir": str(temp_dir / "custom_cache/{package_name}"),
             },
             "config": {
                 "base_dir": str(temp_dir / "custom_config"),
-                "package_dir": str(temp_dir / "custom_config/{package_name}")
+                "package_dir": str(temp_dir / "custom_config/{package_name}"),
             },
             "data": {
                 "base_dir": str(temp_dir / "custom_data"),
-                "package_dir": str(temp_dir / "custom_data/{package_name}")
+                "package_dir": str(temp_dir / "custom_data/{package_name}"),
             },
             "temp": {
                 "base_dir": str(temp_dir / "custom_temp"),
-                "package_dir": str(temp_dir / "custom_temp/{package_name}")
+                "package_dir": str(temp_dir / "custom_temp/{package_name}"),
             },
             "genai": {
                 "lora_dir": str(temp_dir / "custom_genai/loras"),
                 "model_dir": str(temp_dir / "custom_genai/models"),
-                "output_dir": str(temp_dir / "custom_genai/output")
+                "output_dir": str(temp_dir / "custom_genai/output"),
             },
             "logs": {
                 "base_dir": str(temp_dir / "custom_logs"),
-                "package_dir": str(temp_dir / "custom_logs/{package_name}")
-            }
+                "package_dir": str(temp_dir / "custom_logs/{package_name}"),
+            },
         }
-        
+
         config_file = temp_dir / "custom.toml"
         config_content = ""
         for section, values in custom_config.items():
@@ -95,11 +95,11 @@ class TestConfigLoading:
             for key, value in values.items():
                 config_content += f'{key} = "{value}"\n'
             config_content += "\n"
-        
+
         config_file.write_text(config_content)
-        
+
         manager = PathManager(config_file=config_file, create_dirs=False)
-        
+
         # Verify custom paths are used
         assert str(manager.cache.base_dir) == str(temp_dir / "custom_cache")
         assert str(manager.config_dir.base_dir) == str(temp_dir / "custom_config")
@@ -120,12 +120,12 @@ package_dir = "{temp_dir}/partial_cache/{{package_name}}"
 """
         config_file = temp_dir / "partial.toml"
         config_file.write_text(config_content)
-        
+
         manager = PathManager(config_file=config_file, create_dirs=False)
-        
+
         # Cache should use custom paths
         assert str(manager.cache.base_dir) == str(temp_dir / "partial_cache")
-        
+
         # Other sections should use defaults
         assert "~/.config/twat" in str(manager.config_dir.base_dir) or "config" in str(manager.config_dir.base_dir)
 
@@ -133,7 +133,7 @@ package_dir = "{temp_dir}/partial_cache/{{package_name}}"
         """Test handling of invalid TOML format."""
         config_file = temp_dir / "invalid.toml"
         config_file.write_text("invalid toml content [[[")
-        
+
         with pytest.raises(tomli.TOMLDecodeError):
             PathManager(config_file=config_file)
 
@@ -147,7 +147,7 @@ package_dir = "/tmp/test/{package_name}"
 """
         config_file = temp_dir / "missing_section.toml"
         config_file.write_text(config_content)
-        
+
         with pytest.raises(KeyError):
             PathManager(config_file=config_file)
 
@@ -160,7 +160,7 @@ package_dir = "/tmp/test/{package_name}"
 """
         config_file = temp_dir / "missing_key.toml"
         config_file.write_text(config_content)
-        
+
         with pytest.raises(KeyError):
             PathManager(config_file=config_file)
 
@@ -181,9 +181,9 @@ package_dir = "{temp_dir}/commented_config/{{package_name}}"
 """
         config_file = temp_dir / "commented.toml"
         config_file.write_text(config_content)
-        
+
         manager = PathManager(config_file=config_file, create_dirs=False)
-        
+
         # Should work despite comments
         assert str(manager.cache.base_dir) == str(temp_dir / "commented_cache")
         assert str(manager.config_dir.base_dir) == str(temp_dir / "commented_config")
@@ -198,9 +198,9 @@ package_dir = "{unicode_dir}/缓存/{{package_name}}"
 """
         config_file = temp_dir / "unicode.toml"
         config_file.write_text(config_content, encoding="utf-8")
-        
+
         manager = PathManager(config_file=config_file, create_dirs=False)
-        
+
         # Should handle Unicode paths correctly
         assert "测试目录" in str(manager.cache.base_dir)
         assert "缓存" in str(manager.cache.base_dir)
@@ -215,9 +215,9 @@ package_dir = "{space_dir}/cache dir/{{package_name}}"
 """
         config_file = temp_dir / "spaces.toml"
         config_file.write_text(config_content)
-        
+
         manager = PathManager(config_file=config_file, create_dirs=False)
-        
+
         # Should handle spaces in paths correctly
         assert "path with spaces" in str(manager.cache.base_dir)
         assert "cache dir" in str(manager.cache.base_dir)

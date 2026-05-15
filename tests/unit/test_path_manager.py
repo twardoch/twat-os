@@ -128,7 +128,7 @@ class TestPathManager:
         lora_path = manager.get_path("genai", "lora_dir")
         model_path = manager.get_path("genai", "model_dir")
         output_path = manager.get_path("genai", "output_dir")
-        
+
         assert isinstance(lora_path, Path)
         assert isinstance(model_path, Path)
         assert isinstance(output_path, Path)
@@ -158,13 +158,9 @@ package_dir = "${TEST_HOME}/cache/{package_name}"
 """
             config_file = temp_dir / "env_config.toml"
             config_file.write_text(config_content)
-            
-            manager = PathManager(
-                package_name="test_package",
-                config_file=config_file,
-                create_dirs=False
-            )
-            
+
+            manager = PathManager(package_name="test_package", config_file=config_file, create_dirs=False)
+
             assert str(manager.cache.base_dir).startswith(test_var)
             assert str(manager.cache.package_dir).startswith(test_var)
             assert "test_package" in str(manager.cache.package_dir)
@@ -178,13 +174,9 @@ package_dir = "~/test_cache/{package_name}"
 """
         config_file = temp_dir / "home_config.toml"
         config_file.write_text(config_content)
-        
-        manager = PathManager(
-            package_name="test_package",
-            config_file=config_file,
-            create_dirs=False
-        )
-        
+
+        manager = PathManager(package_name="test_package", config_file=config_file, create_dirs=False)
+
         # The paths should be expanded (not contain literal ~)
         assert "~" not in str(manager.cache.base_dir)
         assert "~" not in str(manager.cache.package_dir)
@@ -199,13 +191,9 @@ package_dir = "{temp_dir}/test_cache/{{package_name}}"
 """
         config_file = temp_dir / "creation_config.toml"
         config_file.write_text(config_content)
-        
-        manager = PathManager(
-            package_name="test_package",
-            config_file=config_file,
-            create_dirs=True
-        )
-        
+
+        manager = PathManager(package_name="test_package", config_file=config_file, create_dirs=True)
+
         assert manager.cache.base_dir.exists()
         assert manager.cache.package_dir.exists()
 
@@ -218,12 +206,8 @@ package_dir = "{temp_dir}/test_cache_no_create/{{package_name}}"
 """
         config_file = temp_dir / "no_creation_config.toml"
         config_file.write_text(config_content)
-        
-        manager = PathManager(
-            package_name="test_package",
-            config_file=config_file,
-            create_dirs=False
-        )
-        
+
+        manager = PathManager(package_name="test_package", config_file=config_file, create_dirs=False)
+
         assert not manager.cache.base_dir.exists()
         assert not manager.cache.package_dir.exists()

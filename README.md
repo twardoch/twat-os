@@ -96,25 +96,22 @@ By default, `PathManager` will attempt to create these directories if they do no
 
 ### As a `twat` Plugin
 
-`twat-os` is registered as an `os` plugin when installed in an environment with the `twat` core package (due to the `[project.entry-points."twat.plugins"] os = "twat_os"` line in `pyproject.toml`). This means its functionalities might be accessible via the `twat` plugin system.
+`twat-os` is registered as the `os` plugin via `[project.entry-points."twat.plugins"] os = "twat_os"`. When both `twat` and `twat-os` are installed, you can import it dynamically as `twat.os` or dispatch the package CLI through the host:
 
-For example (hypothetical usage, consult `twat` documentation):
-```python
-# import twat
-#
-# path_manager_instance = twat.plugins.os.get_path_manager() # Or similar API
-# cache_dir = twat.plugins.os.get_cache_dir("my_plugin")
+```bash
+twat --list
+twat os --help
+twat os paths --package my_plugin
 ```
-The exact mechanism for accessing plugins can vary based on the `twat` framework's design. Please refer to the `twat` core documentation for details on using plugins.
 
 ### Command-Line Interface (CLI)
 
-`twat-os` defines a command-line tool named `twat-os`, intended to be invoked as:
+`twat-os` defines a command-line tool named `twat-os`, and the same CLI is used by the host plugin dispatcher:
 ```bash
 twat-os --help
+python -m twat_os --help
+twat os --help
 ```
-
-**Important Note**: While the `twat-os` CLI entry point (`twat_os.__main__:main`) is defined in the `pyproject.toml`, the corresponding `src/twat_os/__main__.py` file that implements its functionality appears to be missing from the source distribution as of its current version. This suggests the CLI might be unimplemented or non-functional at present. Please check the project's issue tracker or future releases for updates on CLI capabilities.
 
 ---
 

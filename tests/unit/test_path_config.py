@@ -49,13 +49,9 @@ class TestPathConfig:
         """Test directory creation when enabled."""
         base_dir = temp_dir / "base"
         package_dir = temp_dir / "package"
-        
-        config = PathConfig(
-            base_dir=base_dir,
-            package_dir=package_dir,
-            create_if_missing=True
-        )
-        
+
+        config = PathConfig(base_dir=base_dir, package_dir=package_dir, create_if_missing=True)
+
         assert base_dir.exists()
         assert package_dir.exists()
 
@@ -63,26 +59,18 @@ class TestPathConfig:
         """Test directory creation when disabled."""
         base_dir = temp_dir / "base"
         package_dir = temp_dir / "package"
-        
-        config = PathConfig(
-            base_dir=base_dir,
-            package_dir=package_dir,
-            create_if_missing=False
-        )
-        
+
+        config = PathConfig(base_dir=base_dir, package_dir=package_dir, create_if_missing=False)
+
         assert not base_dir.exists()
         assert not package_dir.exists()
 
     def test_directory_creation_with_none_package_dir(self, temp_dir: Path) -> None:
         """Test directory creation with None package_dir."""
         base_dir = temp_dir / "base"
-        
-        config = PathConfig(
-            base_dir=base_dir,
-            package_dir=None,
-            create_if_missing=True
-        )
-        
+
+        config = PathConfig(base_dir=base_dir, package_dir=None, create_if_missing=True)
+
         assert base_dir.exists()
 
 
@@ -163,15 +151,11 @@ class TestGenAIConfig:
         lora_dir = temp_dir / "loras"
         model_dir = temp_dir / "models"
         output_dir = temp_dir / "output"
-        
+
         config = GenAIConfig(
-            base_dir=base_dir,
-            lora_dir=lora_dir,
-            model_dir=model_dir,
-            output_dir=output_dir,
-            create_if_missing=False
+            base_dir=base_dir, lora_dir=lora_dir, model_dir=model_dir, output_dir=output_dir, create_if_missing=False
         )
-        
+
         assert config.base_dir == base_dir
         assert config.lora_dir == lora_dir
         assert config.model_dir == model_dir
@@ -183,15 +167,11 @@ class TestGenAIConfig:
         lora_dir = temp_dir / "loras"
         model_dir = temp_dir / "models"
         output_dir = temp_dir / "output"
-        
+
         config = GenAIConfig(
-            base_dir=base_dir,
-            lora_dir=lora_dir,
-            model_dir=model_dir,
-            output_dir=output_dir,
-            create_if_missing=True
+            base_dir=base_dir, lora_dir=lora_dir, model_dir=model_dir, output_dir=output_dir, create_if_missing=True
         )
-        
+
         assert base_dir.exists()
         assert lora_dir.exists()
         assert model_dir.exists()

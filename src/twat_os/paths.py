@@ -2,10 +2,42 @@
 # /// script
 # dependencies = ["pydantic", "platformdirs"]
 # ///
-"""Path management for twat packages.
+"""Platform-aware path management for twat packages.
 
-This module provides a centralized way to manage paths for various twat packages.
-It handles path resolution, validation, and creation of directories as needed.
+Every OS stores application data in different places.  On macOS user caches
+live under ``~/Library/Caches``; on Linux under ``~/.cache``; on Windows under
+``%LOCALAPPDATA%``.  Hard-coding these paths breaks cross-platform portability.
+
+This module uses `platformdirs <https://platformdirs.readthedocs.io>`_ (the
+successor to ``appdirs``) to resolve the correct OS-specific directories at
+runtime, then exposes them through typed Pydantic models.
+
+Directory categories
+---------------------
+cache
+    Temporary data that can be regenerated.  Cleared by the OS under storage
+    pressure.  ``~/.cache/twat`` on Linux.
+config
+    User configuration files.  ``~/.config/twat`` on Linux.
+data
+    Persistent application data (databases, downloaded assets).
+    ``~/.local/share/twat`` on Linux.
+temp
+    Short-lived runtime files (sockets, PID files).
+logs
+    Log files.
+genai
+    Specialised paths for AI model weights, LoRA files, and generated images.
+
+Usage::
+
+    from twat_os.paths import PathManager
+
+    pm = PathManager.for_package("my_plugin")
+    pm.cache.package_dir.mkdir(parents=True, exist_ok=True)
+    model_file = pm.data.package_dir / "model.bin"
+
+Directories are created automatically when ``create_dirs=True`` (the default).
 """
 
 from __future__ import annotations
@@ -59,47 +91,33 @@ class PathConfig(BaseModel):
 class CacheConfig(PathConfig):
     """Configuration for cache directories."""
 
-    base_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_cache_dir()) / "twat"
-    )
+    base_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_cache_dir()) / "twat")
 
 
 class ConfigDirConfig(PathConfig):
     """Configuration for config directories."""
 
-    base_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_config_dir()) / "twat"
-    )
+    base_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_config_dir()) / "twat")
 
 
 class DataDirConfig(PathConfig):
     """Configuration for data directories."""
 
-    base_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat"
-    )
+    base_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat")
 
 
 class TempDirConfig(PathConfig):
     """Configuration for temporary directories."""
 
-    base_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_runtime_dir()) / "twat"
-    )
+    base_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_runtime_dir()) / "twat")
 
 
 class GenAIConfig(PathConfig):
     """Configuration for GenAI-specific paths."""
 
-    lora_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/loras"
-    )
-    model_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/models"
-    )
-    output_dir: Path = Field(
-        default_factory=lambda: Path.home() / "Pictures/twat_genai"
-    )
+    lora_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/loras")
+    model_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/models")
+    output_dir: Path = Field(default_factory=lambda: Path.home() / "Pictures/twat_genai")
 
     @model_validator(mode="after")
     def validate_and_create_all_dirs(self) -> Self:
@@ -115,9 +133,7 @@ class GenAIConfig(PathConfig):
 class LogConfig(PathConfig):
     """Configuration for log directories."""
 
-    base_dir: Path = Field(
-        default_factory=lambda: Path(platformdirs.user_state_dir()) / "twat/logs"
-    )
+    base_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_state_dir()) / "twat/logs")
 
 
 class PathManager:
@@ -226,18 +242,14 @@ class PathManager:
                 # This function is typed to return Path, so None is not allowed here.
                 # This indicates a potential design issue or misuse of get_path for optional paths.
                 # For now, raising an error is safer than returning None.
-                msg = (
-                    f"Path for '{category}.{key}' is None, but Path type was expected."
-                )
+                msg = f"Path for '{category}.{key}' is None, but Path type was expected."
                 raise ValueError(msg)
             msg = f"Unexpected type for '{category}.{key}': {type(path_value)}. Expected Path."
             raise TypeError(msg)
         return path_value  # Cast is redundant due to isinstance check
 
     @classmethod
-    def for_package(
-        cls, package_name: str, config_file: str | Path | None = None
-    ) -> PathManager:
+    def for_package(cls, package_name: str, config_file: str | Path | None = None) -> PathManager:
         """Create a PathManager instance for a specific package.
 
         Args:
@@ -251,7 +263,5 @@ class PathManager:
 
     def __repr__(self) -> str:
         """Return string representation of PathManager."""
-        package_info = (
-            f" for package '{self.package_name}'" if self.package_name else ""
-        )
+        package_info = f" for package '{self.package_name}'" if self.package_name else ""
         return f"PathManager{package_info}"

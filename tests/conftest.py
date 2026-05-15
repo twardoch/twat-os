@@ -2,7 +2,7 @@
 
 import tempfile
 from pathlib import Path
-from typing import Generator
+from collections.abc import Generator
 
 import pytest
 
@@ -57,10 +57,10 @@ def sample_config_file(temp_dir: Path, sample_config_content: str) -> Path:
 def mock_platformdirs(monkeypatch: pytest.MonkeyPatch, temp_dir: Path) -> None:
     """Mock platformdirs to use temporary directories."""
     import platformdirs
-    
+
     test_base = temp_dir / "platformdirs"
     test_base.mkdir()
-    
+
     monkeypatch.setattr(platformdirs, "user_cache_dir", lambda: str(test_base / "cache"))
     monkeypatch.setattr(platformdirs, "user_config_dir", lambda: str(test_base / "config"))
     monkeypatch.setattr(platformdirs, "user_data_dir", lambda: str(test_base / "data"))

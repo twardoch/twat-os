@@ -1,7 +1,0 @@
-547	./llms.txt
-33	./REPO_CONTENT.txt
-18	./README.md
-12	./cleanup.py
-11	./pyproject.toml
-9	./src/twat_os/paths.py
-7	./CLEANUP.txt
