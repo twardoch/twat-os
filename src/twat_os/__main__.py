@@ -1,276 +1,159 @@
-#!/usr/bin/env python3
-"""Command-line interface for twat-os."""
+# this_file: src/twat_os/__main__.py
+"""Fire CLI entry point for twat-os."""
 
-import sys
-from pathlib import Path
-from typing import Optional
+from __future__ import annotations
 
 import fire
-from rich.console import Console
-from rich.table import Table
-
-from twat_os.paths import PathManager
-
-console = Console()
 
 
-class TwatOSCLI:
-    """Command-line interface for twat-os path management."""
+def _version() -> str:
+    """Print the installed twat-os version."""
+    from twat_os.__version__ import __version__
 
-    def __init__(self) -> None:
-        """Initialize the CLI."""
-        self.console = console
+    return __version__
 
-    def paths(
-        self,
-        package: str | None = None,
-        config: str | None = None,
-        create: bool = True,
-    ) -> None:
-        """Display all configured paths.
 
-        Args:
-            package: Package name for package-specific paths
-            config: Path to custom configuration file
-            create: Whether to create directories if they don't exist
-        """
-        try:
-            manager = PathManager(
-                package_name=package,
-                config_file=config,
-                create_dirs=create,
-            )
+def _paths(
+    package: str | None = None,
+    config: str | None = None,
+    create: bool = True,
+) -> dict:
+    """Show all configured OS paths (cache, config, data, temp, logs, genai).
 
-            table = Table(title="Twat-OS Path Configuration")
-            table.add_column("Category", style="cyan")
-            table.add_column("Type", style="yellow")
-            table.add_column("Path", style="green")
-            table.add_column("Exists", style="red")
+    Args:
+        package: Package name for package-specific sub-paths.
+        config: Path to a custom TOML configuration file.
+        create: Create missing directories automatically.
+    """
+    from twat_os.paths import PathManager
 
-            # Add base paths
-            categories = [
-                ("cache", manager.cache),
-                ("config", manager.config_dir),
-                ("data", manager.data),
-                ("temp", manager.temp),
-                ("logs", manager.logs),
-            ]
+    manager = PathManager(package_name=package, config_file=config, create_dirs=create)
+    result: dict = {}
+    for category in ["cache", "config_dir", "data", "temp", "logs"]:
+        cfg = getattr(manager, category)
+        result[category] = {
+            "base_dir": str(cfg.base_dir),
+            "exists": cfg.base_dir.exists(),
+        }
+        if cfg.package_dir:
+            result[category]["package_dir"] = str(cfg.package_dir)
+            result[category]["package_dir_exists"] = cfg.package_dir.exists()
+    result["genai"] = {
+        "base_dir": str(manager.genai.base_dir),
+        "lora_dir": str(manager.genai.lora_dir),
+        "model_dir": str(manager.genai.model_dir),
+        "output_dir": str(manager.genai.output_dir),
+    }
+    return result
 
-            for category, config_obj in categories:
-                table.add_row(
-                    category,
-                    "base_dir",
-                    str(config_obj.base_dir),
-                    "✓" if config_obj.base_dir.exists() else "✗",
-                )
 
-                if config_obj.package_dir:
-                    table.add_row(
-                        "",
-                        "package_dir",
-                        str(config_obj.package_dir),
-                        "✓" if config_obj.package_dir.exists() else "✗",
-                    )
+def _clipboard() -> str:
+    """Read text from the system clipboard."""
+    try:
+        import subprocess
 
-            # Add GenAI paths
-            table.add_row(
-                "genai",
-                "base_dir",
-                str(manager.genai.base_dir),
-                "✓" if manager.genai.base_dir.exists() else "✗",
-            )
-            table.add_row(
-                "",
-                "lora_dir",
-                str(manager.genai.lora_dir),
-                "✓" if manager.genai.lora_dir.exists() else "✗",
-            )
-            table.add_row(
-                "",
-                "model_dir",
-                str(manager.genai.model_dir),
-                "✓" if manager.genai.model_dir.exists() else "✗",
-            )
-            table.add_row(
-                "",
-                "output_dir",
-                str(manager.genai.output_dir),
-                "✓" if manager.genai.output_dir.exists() else "✗",
-            )
+        import sys
 
-            self.console.print(table)
+        if sys.platform == "darwin":
+            return subprocess.check_output(["pbpaste"], text=True)
+        if sys.platform.startswith("linux"):
+            return subprocess.check_output(["xclip", "-selection", "clipboard", "-o"], text=True)
+        if sys.platform == "win32":
+            import tkinter as tk
 
-        except Exception as e:
-            self.console.print(f"[red]Error: {e}[/red]")
-            sys.exit(1)
+            root = tk.Tk()
+            root.withdraw()
+            return root.clipboard_get()
+    except Exception as exc:
+        return f"Error reading clipboard: {exc}"
+    return ""
 
-    def get(
-        self,
-        category: str,
-        key: str = "base_dir",
-        package: str | None = None,
-        config: str | None = None,
-        create: bool = True,
-    ) -> None:
-        """Get a specific path.
 
-        Args:
-            category: Path category (cache, config, data, temp, genai, logs)
-            key: Path key within the category (base_dir, package_dir, etc.)
-            package: Package name for package-specific paths
-            config: Path to custom configuration file
-            create: Whether to create directories if they don't exist
-        """
-        try:
-            manager = PathManager(
-                package_name=package,
-                config_file=config,
-                create_dirs=create,
-            )
+def _open(path: str) -> str:
+    """Open PATH with the system default application."""
+    import subprocess
+    import sys
+    from pathlib import Path
 
-            path = manager.get_path(category, key)
-            self.console.print(str(path))
+    resolved = Path(path).expanduser().resolve()
+    if sys.platform == "darwin":
+        subprocess.run(["open", str(resolved)], check=True)
+    elif sys.platform.startswith("linux"):
+        subprocess.run(["xdg-open", str(resolved)], check=True)
+    elif sys.platform == "win32":
+        subprocess.run(["start", str(resolved)], shell=True, check=True)
+    return str(resolved)
 
-        except Exception as e:
-            self.console.print(f"[red]Error: {e}[/red]")
-            sys.exit(1)
 
-    def create(
-        self,
-        category: str,
-        key: str = "base_dir",
-        package: str | None = None,
-        config: str | None = None,
-    ) -> None:
-        """Create a specific directory.
+def _info(package: str | None = None) -> dict:
+    """Show twat-os path manager summary information.
 
-        Args:
-            category: Path category (cache, config, data, temp, genai, logs)
-            key: Path key within the category (base_dir, package_dir, etc.)
-            package: Package name for package-specific paths
-            config: Path to custom configuration file
-        """
-        try:
-            manager = PathManager(
-                package_name=package,
-                config_file=config,
-                create_dirs=False,
-            )
+    Args:
+        package: Optional package name for package-specific paths.
+    """
+    from twat_os.paths import PathManager
 
-            path = manager.get_path(category, key)
-            path.mkdir(parents=True, exist_ok=True)
+    manager = PathManager(package_name=package, create_dirs=False)
+    total = 0
+    existing = 0
+    for category in ["cache", "config_dir", "data", "temp", "logs"]:
+        cfg = getattr(manager, category)
+        total += 1
+        if cfg.base_dir.exists():
+            existing += 1
+        if cfg.package_dir:
+            total += 1
+            if cfg.package_dir.exists():
+                existing += 1
+    for attr in ["base_dir", "lora_dir", "model_dir", "output_dir"]:
+        total += 1
+        if getattr(manager.genai, attr).exists():
+            existing += 1
+    return {
+        "package": package,
+        "total_paths": total,
+        "existing_paths": existing,
+        "missing_paths": total - existing,
+    }
 
-            self.console.print(f"[green]Created: {path}[/green]")
 
-        except Exception as e:
-            self.console.print(f"[red]Error: {e}[/red]")
-            sys.exit(1)
-
-    def clean(
-        self,
-        category: str,
-        key: str = "base_dir",
-        package: str | None = None,
-        config: str | None = None,
-        force: bool = False,
-    ) -> None:
-        """Clean (remove) a specific directory.
-
-        Args:
-            category: Path category (cache, config, data, temp, genai, logs)
-            key: Path key within the category (base_dir, package_dir, etc.)
-            package: Package name for package-specific paths
-            config: Path to custom configuration file
-            force: Skip confirmation prompt
-        """
-        try:
-            manager = PathManager(
-                package_name=package,
-                config_file=config,
-                create_dirs=False,
-            )
-
-            path = manager.get_path(category, key)
-
-            if not path.exists():
-                self.console.print(f"[yellow]Path does not exist: {path}[/yellow]")
-                return
-
-            if not force:
-                response = input(f"Remove {path}? (y/N): ")
-                if response.lower() != "y":
-                    self.console.print("[yellow]Cancelled[/yellow]")
-                    return
-
-            import shutil
-
-            shutil.rmtree(path)
-            self.console.print(f"[green]Removed: {path}[/green]")
-
-        except Exception as e:
-            self.console.print(f"[red]Error: {e}[/red]")
-            sys.exit(1)
-
-    def info(self, package: str | None = None) -> None:
-        """Display information about the current configuration.
-
-        Args:
-            package: Package name for package-specific information
-        """
-        try:
-            manager = PathManager(package_name=package, create_dirs=False)
-
-            self.console.print("[cyan]Twat-OS Path Manager[/cyan]")
-            self.console.print(f"Package: {package or 'None'}")
-            self.console.print("Configuration: Default")
-            self.console.print("Directory Creation: Disabled")
-            self.console.print()
-
-            # Show summary statistics
-            total_paths = 0
-            existing_paths = 0
-
-            for category in ["cache", "config_dir", "data", "temp", "logs"]:
-                config_obj = getattr(manager, category)
-                total_paths += 1
-                if config_obj.base_dir.exists():
-                    existing_paths += 1
-
-                if config_obj.package_dir:
-                    total_paths += 1
-                    if config_obj.package_dir.exists():
-                        existing_paths += 1
-
-            # GenAI paths
-            genai_paths = ["base_dir", "lora_dir", "model_dir", "output_dir"]
-            for path_attr in genai_paths:
-                total_paths += 1
-                path = getattr(manager.genai, path_attr)
-                if path.exists():
-                    existing_paths += 1
-
-            self.console.print(f"Total paths: {total_paths}")
-            self.console.print(f"Existing paths: {existing_paths}")
-            self.console.print(f"Missing paths: {total_paths - existing_paths}")
-
-        except Exception as e:
-            self.console.print(f"[red]Error: {e}[/red]")
-            sys.exit(1)
-
-    def version(self) -> None:
-        """Display version information."""
-        try:
-            import twat_os
-
-            self.console.print(f"twat-os version: {twat_os.__version__}")
-        except Exception as e:
-            self.console.print(f"[red]Error getting version: {e}[/red]")
-            sys.exit(1)
+COMMANDS: dict[str, object] = {
+    "version": _version,
+    "paths": _paths,
+    "clipboard": _clipboard,
+    "open": _open,
+    "info": _info,
+}
 
 
 def main() -> None:
-    """Main entry point for the CLI."""
-    fire.Fire(TwatOSCLI)
+    """twat-os: OS-aware path management and utilities."""
+    fire.Fire(COMMANDS, name="twat-os")
+
+
+def cmd_version() -> None:
+    """twat-os version."""
+    fire.Fire(_version, name="twat-os-version")
+
+
+def cmd_paths() -> None:
+    """Show all configured OS paths."""
+    fire.Fire(_paths, name="twat-os-paths")
+
+
+def cmd_clipboard() -> None:
+    """Read text from the system clipboard."""
+    fire.Fire(_clipboard, name="twat-os-clipboard")
+
+
+def cmd_open() -> None:
+    """Open a path with the system default application."""
+    fire.Fire(_open, name="twat-os-open")
+
+
+def cmd_info() -> None:
+    """Show twat-os path manager summary information."""
+    fire.Fire(_info, name="twat-os-info")
 
 
 if __name__ == "__main__":

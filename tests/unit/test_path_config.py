@@ -1,7 +1,6 @@
 """Unit tests for PathConfig classes."""
 
 import os
-import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
@@ -50,7 +49,7 @@ class TestPathConfig:
         base_dir = temp_dir / "base"
         package_dir = temp_dir / "package"
 
-        config = PathConfig(base_dir=base_dir, package_dir=package_dir, create_if_missing=True)
+        PathConfig(base_dir=base_dir, package_dir=package_dir, create_if_missing=True)
 
         assert base_dir.exists()
         assert package_dir.exists()
@@ -60,7 +59,7 @@ class TestPathConfig:
         base_dir = temp_dir / "base"
         package_dir = temp_dir / "package"
 
-        config = PathConfig(base_dir=base_dir, package_dir=package_dir, create_if_missing=False)
+        PathConfig(base_dir=base_dir, package_dir=package_dir, create_if_missing=False)
 
         assert not base_dir.exists()
         assert not package_dir.exists()
@@ -69,7 +68,7 @@ class TestPathConfig:
         """Test directory creation with None package_dir."""
         base_dir = temp_dir / "base"
 
-        config = PathConfig(base_dir=base_dir, package_dir=None, create_if_missing=True)
+        PathConfig(base_dir=base_dir, package_dir=None, create_if_missing=True)
 
         assert base_dir.exists()
 
@@ -168,7 +167,7 @@ class TestGenAIConfig:
         model_dir = temp_dir / "models"
         output_dir = temp_dir / "output"
 
-        config = GenAIConfig(
+        GenAIConfig(
             base_dir=base_dir, lora_dir=lora_dir, model_dir=model_dir, output_dir=output_dir, create_if_missing=True
         )
 

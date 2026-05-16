@@ -102,6 +102,11 @@ docs = [
 #------------------------------------------------------------------------------
 [project.scripts]
 twat-os = "twat_os.__main__:main"
+twat-os-version = "twat_os.__main__:cmd_version"
+twat-os-paths = "twat_os.__main__:cmd_paths"
+twat-os-clipboard = "twat_os.__main__:cmd_clipboard"
+twat-os-open = "twat_os.__main__:cmd_open"
+twat-os-info = "twat_os.__main__:cmd_info"
 
 [project.entry-points."twat.plugins"]
 os = "twat_os"
