@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- `PathConfig.expand_path` validator now runs `mode="before"` (Pydantic v2)
+  so TOML string values like `"~/.cache/twat"` are fully expanded before being
+  stored as `Path` objects.  The `~` component is replaced separately from the
+  rest of the path so that `Path.expanduser()` mocks work correctly in tests.
+- `GenAIConfig` now declares `base_dir` with a `platformdirs` default factory,
+  allowing direct instantiation without explicit arguments.
+- `PathManager._init_paths` no longer raises `KeyError` when a user-supplied
+  config file omits sections: missing sections fall back to `DEFAULT_PATHS`.
+- `PathManager.for_package` now accepts a `create_dirs` keyword argument,
+  matching the `__init__` signature.
+- `PathManager.__init__` stores the raw user config as `_user_config` and
+  builds `self.config` as a section-level merge of `DEFAULT_PATHS` with the
+  user config, preserving backward-compatible attribute access.
+
+### Added
+- `docs/` directory with Jekyll-style documentation:
+  `index.md` (overview + quick-start), `api.md` (full API reference),
+  `usage.md` (recipes and CLI guide).
+
+
+
 ### Added - Git-Tag-Based Semversioning Implementation
 - **Complete git-tag-based semantic versioning system**
   - Automated version management from git tags

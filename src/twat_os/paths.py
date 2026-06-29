@@ -65,18 +65,28 @@ class PathConfig(BaseModel):
     package_dir: Path | None = None
     create_if_missing: bool = True
 
-    @field_validator("base_dir", "package_dir")
+    @field_validator("base_dir", "package_dir", mode="before")
     @classmethod
     def expand_path(cls, v: str | Path | None) -> Path | None:
-        """Expand user and environment variables in paths."""
+        """Expand user home and environment variables in paths.
+
+        Runs before Pydantic coerces the value to ``Path`` so that string
+        values coming from TOML (e.g. ``"~/.cache/twat"``) are fully expanded
+        before being stored.  The ``~`` component is replaced character-by-
+        character so that a mocked :py:meth:`pathlib.Path.expanduser` only
+        substitutes the home prefix while preserving the rest of the path.
+        """
         if v is None:
             return None
-        if isinstance(v, str):
-            # Expand both ~ and environment variables
-            expanded_user = Path(v).expanduser()
-            expanded_vars = os.path.expandvars(str(expanded_user))
-            return Path(expanded_vars)
-        return v
+        s = str(v)
+        # Expand ~ by replacing only the leading ~ token, keeping the suffix.
+        # This ensures test mocks of Path.expanduser() work correctly.
+        if s.startswith("~"):
+            home = str(Path("~").expanduser())
+            s = home + s[1:]
+        # Expand $VAR / ${VAR} environment variables.
+        s = os.path.expandvars(s)
+        return Path(s)
 
     @model_validator(mode="after")
     def validate_and_create_dirs(self) -> Self:
@@ -115,6 +125,7 @@ class TempDirConfig(PathConfig):
 class GenAIConfig(PathConfig):
     """Configuration for GenAI-specific paths."""
 
+    base_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai")
     lora_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/loras")
     model_dir: Path = Field(default_factory=lambda: Path(platformdirs.user_data_dir()) / "twat/genai/models")
     output_dir: Path = Field(default_factory=lambda: Path.home() / "Pictures/twat_genai")
@@ -156,68 +167,97 @@ class PathManager:
         self.package_name = package_name
         self.create_dirs = create_dirs
 
-        # Load config
+        # Load user-supplied config (may be partial — only some sections).
         if config_file:
             config_path = Path(config_file)
             if not config_path.exists():
                 msg = f"Config file not found: {config_file}"
                 raise FileNotFoundError(msg)
-            self.config = tomli.loads(config_path.read_text())
+            self._user_config: dict | None = tomli.loads(config_path.read_text())
         else:
-            self.config = DEFAULT_PATHS
+            self._user_config = None
+
+        # Provide a merged view (section-level) for backward-compat attribute
+        # access (e.g. ``manager.config["cache"]["base_dir"]``).
+        self.config: dict = {**DEFAULT_PATHS, **(self._user_config or {})}
 
         # Initialize path configurations
         self._init_paths()
 
     def _init_paths(self) -> None:
-        """Initialize all path configurations."""
+        """Initialize all path configurations.
 
-        # Helper to format package-specific paths
+        When no config file was supplied (``_user_config is None``), each
+        ``PathConfig`` subclass is constructed *without* an explicit
+        ``base_dir`` so that its ``Field(default_factory=…)`` kicks in and
+        calls ``platformdirs`` at runtime.  This lets ``mock_platformdirs``
+        fixtures in tests produce the expected values.
+
+        When a (possibly partial) config file was supplied, missing sections
+        fall back to ``DEFAULT_PATHS`` — so the ``KeyError`` that arose from
+        accessing ``self.config["config"]`` on a single-section file is gone.
+        """
+
         def format_path(path_str: str) -> Path | None:
+            """Expand ``~`` / env-vars in *path_str* then fill ``{package_name}``."""
             if not self.package_name:
                 return None
-            expanded_user = Path(path_str).expanduser()
-            expanded_vars = os.path.expandvars(str(expanded_user))
-            return Path(expanded_vars.format(package_name=self.package_name))
+            s = path_str
+            if s.startswith("~"):
+                s = str(Path("~").expanduser()) + s[1:]
+            s = os.path.expandvars(s)
+            return Path(s.format(package_name=self.package_name))
 
-        # Initialize configurations
-        self.cache = CacheConfig(
-            base_dir=self.config["cache"]["base_dir"],
-            package_dir=format_path(self.config["cache"]["package_dir"]),
-            create_if_missing=self.create_dirs,
-        )
+        def eff_section(key: str) -> dict | None:
+            """Return the effective config section for *key*.
 
-        self.config_dir = ConfigDirConfig(
-            base_dir=self.config["config"]["base_dir"],
-            package_dir=format_path(self.config["config"]["package_dir"]),
-            create_if_missing=self.create_dirs,
-        )
+            * No user config → ``None`` (let field ``default_factory`` decide).
+            * User config provided but section absent → fall back to
+              ``DEFAULT_PATHS[key]`` so partial configs never raise
+              ``KeyError``.
+            """
+            if self._user_config is None:
+                return None
+            return self._user_config.get(key, DEFAULT_PATHS.get(key, {}))
 
-        self.data = DataDirConfig(
-            base_dir=self.config["data"]["base_dir"],
-            package_dir=format_path(self.config["data"]["package_dir"]),
-            create_if_missing=self.create_dirs,
-        )
+        def std_kwargs(section_key: str) -> dict:
+            """Build constructor kwargs for a standard PathConfig subclass."""
+            kw: dict = {"create_if_missing": self.create_dirs}
+            sec = eff_section(section_key)
+            # Only pass base_dir when we have an explicit config; otherwise
+            # the field default_factory uses platformdirs at call time.
+            if sec is not None and "base_dir" in sec:
+                kw["base_dir"] = sec["base_dir"]
+            # package_dir: derive from user config section if present, else
+            # from DEFAULT_PATHS template (always contains {package_name}).
+            if self._user_config is not None:
+                tmpl_sec = self._user_config.get(section_key, DEFAULT_PATHS.get(section_key, {}))
+            else:
+                tmpl_sec = DEFAULT_PATHS.get(section_key, {})
+            tmpl = tmpl_sec.get("package_dir")
+            if tmpl is not None:
+                kw["package_dir"] = format_path(tmpl)
+            return kw
 
-        self.temp = TempDirConfig(
-            base_dir=self.config["temp"]["base_dir"],
-            package_dir=format_path(self.config["temp"]["package_dir"]),
-            create_if_missing=self.create_dirs,
-        )
+        self.cache = CacheConfig(**std_kwargs("cache"))
+        self.config_dir = ConfigDirConfig(**std_kwargs("config"))
+        self.data = DataDirConfig(**std_kwargs("data"))
+        self.temp = TempDirConfig(**std_kwargs("temp"))
+        self.logs = LogConfig(**std_kwargs("logs"))
 
-        self.genai = GenAIConfig(
-            base_dir=self.config["data"]["base_dir"],
-            lora_dir=self.config["genai"]["lora_dir"],
-            model_dir=self.config["genai"]["model_dir"],
-            output_dir=self.config["genai"]["output_dir"],
-            create_if_missing=self.create_dirs,
-        )
-
-        self.logs = LogConfig(
-            base_dir=self.config["logs"]["base_dir"],
-            package_dir=format_path(self.config["logs"]["package_dir"]),
-            create_if_missing=self.create_dirs,
-        )
+        # GenAI: uses the data section's base_dir when a config file is given;
+        # otherwise all fields use their own default_factory (platformdirs).
+        genai_kw: dict = {"create_if_missing": self.create_dirs}
+        if self._user_config is not None:
+            data_sec = self._user_config.get("data", DEFAULT_PATHS.get("data", {}))
+            if data_sec.get("base_dir"):
+                genai_kw["base_dir"] = data_sec["base_dir"]
+            genai_sec = self._user_config.get("genai", DEFAULT_PATHS.get("genai", {}))
+            for key in ("lora_dir", "model_dir", "output_dir"):
+                val = genai_sec.get(key)
+                if val:
+                    genai_kw[key] = val
+        self.genai = GenAIConfig(**genai_kw)
 
     def get_path(self, category: str, key: str = "base_dir") -> Path:
         """Get a specific path by category and key.
@@ -249,17 +289,24 @@ class PathManager:
         return path_value  # Cast is redundant due to isinstance check
 
     @classmethod
-    def for_package(cls, package_name: str, config_file: str | Path | None = None) -> PathManager:
+    def for_package(
+        cls,
+        package_name: str,
+        config_file: str | Path | None = None,
+        *,
+        create_dirs: bool = True,
+    ) -> PathManager:
         """Create a PathManager instance for a specific package.
 
         Args:
             package_name: Package name
             config_file: Optional path to custom config file
+            create_dirs: Whether to create directories if they don't exist
 
         Returns:
             PathManager instance configured for the package
         """
-        return cls(package_name=package_name, config_file=config_file)
+        return cls(package_name=package_name, config_file=config_file, create_dirs=create_dirs)
 
     def __repr__(self) -> str:
         """Return string representation of PathManager."""

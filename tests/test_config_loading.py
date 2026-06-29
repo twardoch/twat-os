@@ -137,31 +137,34 @@ package_dir = "{temp_dir}/partial_cache/{{package_name}}"
             PathManager(config_file=config_file)
 
     def test_missing_required_section(self, temp_dir: Path) -> None:
-        """Test handling of missing required sections."""
-        # Config missing cache section
-        config_content = """
+        """Missing sections in a custom config fall back to DEFAULT_PATHS values."""
+        # Config has only [config]; [cache] and others are absent.
+        config_content = f"""
 [config]
-base_dir = "/tmp/test"
-package_dir = "/tmp/test/{package_name}"
+base_dir = "{temp_dir}/custom_config"
+package_dir = "{temp_dir}/custom_config/{{package_name}}"
 """
         config_file = temp_dir / "missing_section.toml"
         config_file.write_text(config_content)
 
-        with pytest.raises(KeyError):
-            PathManager(config_file=config_file)
+        # Lenient design: missing sections fall back to DEFAULT_PATHS — no error.
+        manager = PathManager(config_file=config_file, create_dirs=False)
+        assert str(manager.config_dir.base_dir) == str(temp_dir / "custom_config")
+        # cache falls back to a platformdirs-derived default (not None)
+        assert manager.cache.base_dir is not None
 
     def test_missing_required_key(self, temp_dir: Path) -> None:
-        """Test handling of missing required keys."""
-        # Config missing base_dir in cache section
-        config_content = """
+        """A [cache] section without base_dir falls back to the platformdirs default."""
+        config_content = f"""
 [cache]
-package_dir = "/tmp/test/{package_name}"
+package_dir = "{temp_dir}/cache/{{package_name}}"
 """
         config_file = temp_dir / "missing_key.toml"
         config_file.write_text(config_content)
 
-        with pytest.raises(KeyError):
-            PathManager(config_file=config_file)
+        # Lenient design: missing base_dir → default_factory provides it.
+        manager = PathManager(config_file=config_file, create_dirs=False)
+        assert manager.cache.base_dir is not None
 
     def test_config_with_comments(self, temp_dir: Path) -> None:
         """Test configuration file with comments."""
